@@ -64,14 +64,10 @@ Future<void> showCelebrationDialog(
 }
 
 void _playInitialHaptic(CelebrationIntensity intensity) {
-  switch (intensity) {
-    case CelebrationIntensity.subtle:
-      HapticFeedback.mediumImpact();
-    case CelebrationIntensity.modest:
-      HapticFeedback.heavyImpact();
-    case CelebrationIntensity.big:
-    case CelebrationIntensity.epic:
-      HapticFeedback.heavyImpact();
+  if (intensity == CelebrationIntensity.subtle) {
+    HapticFeedback.mediumImpact();
+  } else {
+    HapticFeedback.heavyImpact();
   }
 }
 
@@ -104,7 +100,6 @@ class _CelebrationViewState extends State<_CelebrationView> {
       minForce: 8,
       maxForce: 20,
       emissionFrequency: 0.05,
-      explosive: true,
     ),
     CelebrationIntensity.big: _ConfettiParams(
       duration: Duration(milliseconds: 1500),
@@ -112,7 +107,6 @@ class _CelebrationViewState extends State<_CelebrationView> {
       minForce: 6,
       maxForce: 14,
       emissionFrequency: 0.08,
-      explosive: true,
     ),
     CelebrationIntensity.epic: _ConfettiParams(
       duration: Duration(milliseconds: 2200),
@@ -120,7 +114,6 @@ class _CelebrationViewState extends State<_CelebrationView> {
       minForce: 7,
       maxForce: 16,
       emissionFrequency: 0.07,
-      explosive: true,
       withSideCannons: true,
     ),
   };
@@ -151,7 +144,10 @@ class _CelebrationViewState extends State<_CelebrationView> {
   /// without crossing into buzzy territory.
   void _playFollowUpHaptic() {
     if (widget.intensity == CelebrationIntensity.epic) {
-      Future.delayed(const Duration(milliseconds: 450), HapticFeedback.mediumImpact);
+      Future.delayed(
+        const Duration(milliseconds: 450),
+        HapticFeedback.mediumImpact,
+      );
     }
   }
 
@@ -175,7 +171,9 @@ class _CelebrationViewState extends State<_CelebrationView> {
         Dialog(
           backgroundColor: Theme.of(context).colorScheme.surface,
           insetPadding: const EdgeInsets.all(24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
@@ -284,26 +282,23 @@ class _ConfettiParams {
     required this.minForce,
     required this.maxForce,
     required this.emissionFrequency,
-    required this.explosive,
     this.withSideCannons = false,
   }) : enabled = true;
 
   const _ConfettiParams.disabled()
-      : duration = const Duration(milliseconds: 1),
-        particles = 0,
-        minForce = 0,
-        maxForce = 0,
-        emissionFrequency = 0,
-        explosive = false,
-        withSideCannons = false,
-        enabled = false;
+    : duration = const Duration(milliseconds: 1),
+      particles = 0,
+      minForce = 0,
+      maxForce = 0,
+      emissionFrequency = 0,
+      withSideCannons = false,
+      enabled = false;
 
   final Duration duration;
   final int particles;
   final double minForce;
   final double maxForce;
   final double emissionFrequency;
-  final bool explosive;
   final bool withSideCannons;
   final bool enabled;
 }

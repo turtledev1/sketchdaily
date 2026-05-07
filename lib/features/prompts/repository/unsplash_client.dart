@@ -54,11 +54,9 @@ class UnsplashException implements Exception {
 }
 
 class UnsplashClient {
-  UnsplashClient({
-    required UnsplashConfig config,
-    http.Client? httpClient,
-  })  : _config = config,
-        _http = httpClient ?? http.Client();
+  UnsplashClient({required UnsplashConfig config, http.Client? httpClient})
+    : _config = config,
+      _http = httpClient ?? http.Client();
 
   final UnsplashConfig _config;
   final http.Client _http;
@@ -108,18 +106,16 @@ class UnsplashClient {
   Future<void> trackDownload(String downloadLocation) async {
     if (downloadLocation.isEmpty) return;
     try {
-      await _http
-          .get(Uri.parse(downloadLocation), headers: _headers)
-          .timeout(_timeout);
+      await _http.get(Uri.parse(downloadLocation), headers: _headers).timeout(_timeout);
     } catch (_) {
       // Intentionally ignored.
     }
   }
 
   Map<String, String> get _headers => {
-        'Authorization': 'Client-ID ${_config.accessKey}',
-        'Accept-Version': 'v1',
-      };
+    'Authorization': 'Client-ID ${_config.accessKey}',
+    'Accept-Version': 'v1',
+  };
 
   void dispose() => _http.close();
 }

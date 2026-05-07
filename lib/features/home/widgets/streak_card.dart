@@ -41,10 +41,7 @@ class _StreakCardState extends State<StreakCard> {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            Text(
-              '🔥',
-              style: Theme.of(context).textTheme.displayMedium,
-            ),
+            Text('🔥', style: Theme.of(context).textTheme.displayMedium),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -60,26 +57,25 @@ class _StreakCardState extends State<StreakCard> {
                     builder: (context, value, _) => Text(
                       '$value day${value == 1 ? '' : 's'}',
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            color: colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   Text(
-                    widget.completedToday
-                        ? 'You\'ve sketched today. Nice.'
-                        : 'Keep the streak alive.',
+                    widget.completedToday ? 'You\'ve sketched today. Nice.' : 'Keep the streak alive.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onPrimaryContainer,
-                        ),
+                      color: colorScheme.onPrimaryContainer,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Longest streak: ${widget.longestStreak}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onPrimaryContainer
-                              .withValues(alpha: 0.75),
-                        ),
+                      color: colorScheme.onPrimaryContainer.withValues(
+                        alpha: 0.75,
+                      ),
+                    ),
                   ),
                 ],
               ),

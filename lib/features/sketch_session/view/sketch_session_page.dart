@@ -17,9 +17,8 @@ class SketchSessionPage extends StatefulWidget {
   static Route<bool> route() {
     return MaterialPageRoute<bool>(
       builder: (context) => BlocProvider(
-        create: (ctx) => SketchSessionBloc(
-          promptRepository: ctx.read<PromptRepository>(),
-        )..add(const SketchSessionRequested()),
+        create: (ctx) =>
+            SketchSessionBloc(promptRepository: ctx.read<PromptRepository>())..add(const SketchSessionRequested()),
         child: const SketchSessionPage(),
       ),
     );
@@ -49,24 +48,22 @@ class _SketchSessionPageState extends State<SketchSessionPage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<SketchSessionBloc, SketchSessionState>(
-      listenWhen: (prev, curr) =>
-          prev.status != curr.status &&
-          curr.status == SketchSessionStatus.completed,
+      listenWhen: (prev, curr) => prev.status != curr.status && curr.status == SketchSessionStatus.completed,
       listener: (context, state) {
         final sessionBloc = context.read<SketchSessionBloc>();
         // Completion is only reachable from running/paused, which both
         // require a loaded prompt — so the bang here is a true invariant.
         final lockedPrompt = state.prompt!;
         context.read<StreakBloc>().add(
-              StreakSessionCompleted(
-                completedAt: DateTime.now(),
-                durationSeconds: sessionBloc.elapsedSeconds(),
-                photoId: lockedPrompt.photoId,
-                imageUrl: lockedPrompt.imageUrl,
-                photographerName: lockedPrompt.photographerName,
-                photographerProfileUrl: lockedPrompt.photographerProfileUrl,
-              ),
-            );
+          StreakSessionCompleted(
+            completedAt: DateTime.now(),
+            durationSeconds: sessionBloc.elapsedSeconds(),
+            photoId: lockedPrompt.photoId,
+            imageUrl: lockedPrompt.imageUrl,
+            photographerName: lockedPrompt.photographerName,
+            photographerProfileUrl: lockedPrompt.photographerProfileUrl,
+          ),
+        );
         // `true` signals to the home page that a session just completed so
         // it can show the "nice work" SnackBar there (away from this page,
         // which is about to be disposed).
@@ -83,19 +80,16 @@ class _SketchSessionPageState extends State<SketchSessionPage> {
               // enable→disable→enable color flicker on fast refreshes;
               // tapping refresh again during a refresh is a harmless
               // no-op (the bloc handler ignores it).
-              buildWhen: (prev, curr) =>
-                  _canRefresh(prev.status) != _canRefresh(curr.status),
+              buildWhen: (prev, curr) => _canRefresh(prev.status) != _canRefresh(curr.status),
               builder: (context, state) {
                 final canRefresh = _canRefresh(state.status);
                 return IconButton(
                   icon: const Icon(Icons.refresh),
-                  tooltip: canRefresh
-                      ? 'Get a different image'
-                      : 'Image locked — already started',
+                  tooltip: canRefresh ? 'Get a different image' : 'Image locked — already started',
                   onPressed: canRefresh
-                      ? () => context
-                          .read<SketchSessionBloc>()
-                          .add(const SketchSessionPromptRefreshRequested())
+                      ? () => context.read<SketchSessionBloc>().add(
+                          const SketchSessionPromptRefreshRequested(),
+                        )
                       : null,
                 );
               },
@@ -129,8 +123,7 @@ class _SketchSessionPageState extends State<SketchSessionPage> {
 /// Both `ready` and `refreshingPrompt` count: tapping refresh while a
 /// refresh is already in flight is a no-op at the bloc level.
 bool _canRefresh(SketchSessionStatus status) =>
-    status == SketchSessionStatus.ready ||
-    status == SketchSessionStatus.refreshingPrompt;
+    status == SketchSessionStatus.ready || status == SketchSessionStatus.refreshingPrompt;
 
 class _ErrorView extends StatelessWidget {
   const _ErrorView({this.message});
@@ -152,9 +145,9 @@ class _ErrorView extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
-            onPressed: () => context
-                .read<SketchSessionBloc>()
-                .add(const SketchSessionRequested()),
+            onPressed: () => context.read<SketchSessionBloc>().add(
+              const SketchSessionRequested(),
+            ),
             icon: const Icon(Icons.refresh),
             label: const Text('Retry'),
           ),
@@ -192,8 +185,7 @@ class _ActiveSession extends StatelessWidget {
                     // downloading. The dim overlay above is what tells the
                     // user "a swap is happening".
                     useOldImageOnUrlChange: true,
-                    placeholder: (_, _) =>
-                        const Center(child: CircularProgressIndicator()),
+                    placeholder: (_, _) => const Center(child: CircularProgressIndicator()),
                   ),
                   // Subtle "fetching a new image" overlay during refresh.
                   // The old image stays visible behind it so the layout
@@ -201,9 +193,7 @@ class _ActiveSession extends StatelessWidget {
                   if (refreshing)
                     const ColoredBox(
                       color: Color(0x66000000),
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
                 ],
               ),

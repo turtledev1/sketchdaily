@@ -30,13 +30,13 @@ class StreakSessionCompleted extends StreakEvent {
 
   @override
   List<Object?> get props => [
-        completedAt,
-        durationSeconds,
-        photoId,
-        imageUrl,
-        photographerName,
-        photographerProfileUrl,
-      ];
+    completedAt,
+    durationSeconds,
+    photoId,
+    imageUrl,
+    photographerName,
+    photographerProfileUrl,
+  ];
 }
 
 /// Acknowledges a celebration so it doesn't re-trigger.

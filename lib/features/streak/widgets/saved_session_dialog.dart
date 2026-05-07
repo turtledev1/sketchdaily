@@ -24,7 +24,11 @@ Future<void> showSavedSessionDialog(
 }
 
 class SavedSessionDialog extends StatelessWidget {
-  const SavedSessionDialog({super.key, required this.date, required this.record});
+  const SavedSessionDialog({
+    super.key,
+    required this.date,
+    required this.record,
+  });
 
   final DateTime date;
   final SketchSessionRecord? record;
@@ -88,15 +92,10 @@ class _SavedImage extends StatelessWidget {
       color: theme.colorScheme.primary,
     );
 
-    final photographerUri = Uri.parse(
-      '${record.photographerProfileUrl}'
-      '?utm_source=${UnsplashConfig.utmSource}'
-      '&utm_medium=${UnsplashConfig.utmMedium}',
+    final photographerUri = UnsplashConfig.photographerUri(
+      record.photographerProfileUrl,
     );
-    final unsplashUri = Uri.parse(
-      'https://unsplash.com/?utm_source=${UnsplashConfig.utmSource}'
-      '&utm_medium=${UnsplashConfig.utmMedium}',
-    );
+    final unsplashUri = UnsplashConfig.unsplashHomepageUri();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,11 +108,8 @@ class _SavedImage extends StatelessWidget {
             child: CachedNetworkImage(
               imageUrl: record.imageUrl,
               fit: BoxFit.cover,
-              placeholder: (_, _) =>
-                  const Center(child: CircularProgressIndicator()),
-              errorWidget: (_, _, _) => const Center(
-                child: Icon(Icons.broken_image_outlined),
-              ),
+              placeholder: (_, _) => const Center(child: CircularProgressIndicator()),
+              errorWidget: (_, _, _) => const Center(child: Icon(Icons.broken_image_outlined)),
             ),
           ),
         ),

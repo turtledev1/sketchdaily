@@ -39,9 +39,7 @@ Future<void> main() async {
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(
-            create: (_) => StreakBloc(repository: streakRepository),
-          ),
+          BlocProvider(create: (_) => StreakBloc(repository: streakRepository)),
         ],
         child: const SketchDailyApp(),
       ),

@@ -47,8 +47,7 @@ class StreakRepository {
     return _db ??= await AppDatabase.instance();
   }
 
-  static String formatDate(DateTime date) =>
-      _isoDate.format(DateTime(date.year, date.month, date.day));
+  static String formatDate(DateTime date) => _isoDate.format(DateTime(date.year, date.month, date.day));
 
   Future<void> recordSession({
     required DateTime completedAt,

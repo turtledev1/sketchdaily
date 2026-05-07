@@ -39,8 +39,8 @@ class CountdownRing extends StatelessWidget {
           Text(
             _format(remainingSeconds),
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ],
       ),

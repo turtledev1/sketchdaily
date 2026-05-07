@@ -67,16 +67,14 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final today = DateFormat.yMMMMEEEEd().format(DateTime.now());
     return BlocListener<StreakBloc, StreakState>(
-      listenWhen: (prev, curr) =>
-          curr.pendingMilestone != null &&
-          prev.pendingMilestone != curr.pendingMilestone,
+      listenWhen: (prev, curr) => curr.pendingMilestone != null && prev.pendingMilestone != curr.pendingMilestone,
       listener: (context, state) async {
         final threshold = state.pendingMilestone!;
         await showCelebrationDialog(context, threshold: threshold);
         if (context.mounted) {
-          context
-              .read<StreakBloc>()
-              .add(StreakMilestoneAcknowledged(threshold));
+          context.read<StreakBloc>().add(
+            StreakMilestoneAcknowledged(threshold),
+          );
         }
       },
       child: Scaffold(
@@ -104,8 +102,7 @@ class _HomePageState extends State<HomePage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(today,
-                        style: Theme.of(context).textTheme.titleMedium),
+                    Text(today, style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 16),
                     StreakCard(
                       currentStreak: state.currentStreak,
@@ -141,8 +138,7 @@ class _HomePageState extends State<HomePage> {
                       )
                     else
                       FilledButton.icon(
-                        onPressed:
-                            _online ? () => _startSketch(context) : null,
+                        onPressed: _online ? () => _startSketch(context) : null,
                         icon: const Icon(Icons.brush),
                         label: const Text('Start today\'s sketch'),
                       ),

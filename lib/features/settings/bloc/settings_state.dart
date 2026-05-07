@@ -30,6 +30,9 @@ class SettingsState extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [reminderTime.hour, reminderTime.minute, notificationsEnabled];
+  List<Object?> get props => [
+    reminderTime.hour,
+    reminderTime.minute,
+    notificationsEnabled,
+  ];
 }

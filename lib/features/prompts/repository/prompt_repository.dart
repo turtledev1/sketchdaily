@@ -21,15 +21,9 @@ class ImagePrompt {
 
   /// Unsplash attribution link per their brand guidelines
   /// (https://help.unsplash.com/en/articles/2511315-guideline-attribution).
-  Uri unsplashAttributionUri() => Uri.parse(
-        'https://unsplash.com/?utm_source=${UnsplashConfig.utmSource}'
-        '&utm_medium=${UnsplashConfig.utmMedium}',
-      );
+  Uri unsplashAttributionUri() => UnsplashConfig.unsplashHomepageUri();
 
-  Uri photographerUri() => Uri.parse(
-        '$photographerProfileUrl?utm_source=${UnsplashConfig.utmSource}'
-        '&utm_medium=${UnsplashConfig.utmMedium}',
-      );
+  Uri photographerUri() => UnsplashConfig.photographerUri(photographerProfileUrl);
 }
 
 class PromptRepository {
@@ -66,8 +60,7 @@ class PromptRepository {
   /// Best-effort ping of Unsplash's download-tracking endpoint. Call this
   /// when the user actually starts the session (image is being used), not
   /// on prefetch. See Unsplash API Guidelines.
-  Future<void> trackUsage(ImagePrompt prompt) =>
-      _client.trackDownload(prompt.downloadLocation);
+  Future<void> trackUsage(ImagePrompt prompt) => _client.trackDownload(prompt.downloadLocation);
 
   static int _dayOfYear(DateTime date) {
     final startOfYear = DateTime(date.year);

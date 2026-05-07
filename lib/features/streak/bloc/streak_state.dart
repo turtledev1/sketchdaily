@@ -10,11 +10,11 @@ class StreakState extends Equatable {
   });
 
   const StreakState.initial()
-      : currentStreak = 0,
-        longestStreak = 0,
-        completedDates = const <String>{},
-        lastMilestoneCelebrated = 0,
-        pendingMilestone = null;
+    : currentStreak = 0,
+      longestStreak = 0,
+      completedDates = const <String>{},
+      lastMilestoneCelebrated = 0,
+      pendingMilestone = null;
 
   /// Consecutive-day streak ending today (or ending yesterday if today isn't done yet).
   final int currentStreak;
@@ -45,22 +45,19 @@ class StreakState extends Equatable {
       currentStreak: currentStreak ?? this.currentStreak,
       longestStreak: longestStreak ?? this.longestStreak,
       completedDates: completedDates ?? this.completedDates,
-      lastMilestoneCelebrated:
-          lastMilestoneCelebrated ?? this.lastMilestoneCelebrated,
-      pendingMilestone:
-          clearPendingMilestone ? null : (pendingMilestone ?? this.pendingMilestone),
+      lastMilestoneCelebrated: lastMilestoneCelebrated ?? this.lastMilestoneCelebrated,
+      pendingMilestone: clearPendingMilestone ? null : (pendingMilestone ?? this.pendingMilestone),
     );
   }
 
-  bool isCompletedOn(DateTime date) =>
-      completedDates.contains(StreakRepository.formatDate(date));
+  bool isCompletedOn(DateTime date) => completedDates.contains(StreakRepository.formatDate(date));
 
   @override
   List<Object?> get props => [
-        currentStreak,
-        longestStreak,
-        completedDates,
-        lastMilestoneCelebrated,
-        pendingMilestone,
-      ];
+    currentStreak,
+    longestStreak,
+    completedDates,
+    lastMilestoneCelebrated,
+    pendingMilestone,
+  ];
 }

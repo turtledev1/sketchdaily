@@ -79,8 +79,7 @@ class BadgeDefinitions {
     ),
   ];
 
-  static List<int> get thresholds =>
-      all.map((b) => b.threshold).toList(growable: false);
+  static List<int> get thresholds => all.map((b) => b.threshold).toList(growable: false);
 
   static BadgeDefinition? forThreshold(int threshold) {
     for (final b in all) {

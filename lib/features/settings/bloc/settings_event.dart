@@ -6,10 +6,6 @@ sealed class SettingsEvent extends Equatable {
   List<Object?> get props => const [];
 }
 
-class SettingsLoaded extends SettingsEvent {
-  const SettingsLoaded();
-}
-
 class SettingsReminderTimeChanged extends SettingsEvent {
   const SettingsReminderTimeChanged(this.time);
   final TimeOfDay time;

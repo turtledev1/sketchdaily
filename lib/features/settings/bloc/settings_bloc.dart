@@ -12,12 +12,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   SettingsBloc({
     required NotificationService notifications,
     required SharedPreferences prefs,
-  })  : _notifications = notifications,
-        _prefs = prefs,
-        super(SettingsState.fromPrefs(prefs)) {
-    on<SettingsLoaded>(_onLoaded);
+  }) : _notifications = notifications,
+       _prefs = prefs,
+       super(SettingsState.fromPrefs(prefs)) {
     on<SettingsReminderTimeChanged>(_onReminderChanged);
     on<SettingsNotificationsToggled>(_onToggled);
+    // Apply the persisted schedule immediately on construction.
+    _applyScheduling(state);
   }
 
   final NotificationService _notifications;
@@ -26,14 +27,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   static const _keyHour = 'reminder_hour';
   static const _keyMinute = 'reminder_minute';
   static const _keyEnabled = 'notifications_enabled';
-
-  Future<void> _onLoaded(
-    SettingsLoaded event,
-    Emitter<SettingsState> emit,
-  ) async {
-    emit(SettingsState.fromPrefs(_prefs));
-    await _applyScheduling(state);
-  }
 
   Future<void> _onReminderChanged(
     SettingsReminderTimeChanged event,

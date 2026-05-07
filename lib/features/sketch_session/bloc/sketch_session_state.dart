@@ -30,10 +30,10 @@ class SketchSessionState extends Equatable {
   });
 
   const SketchSessionState.initial({this.totalSeconds = 300})
-      : status = SketchSessionStatus.loadingPrompt,
-        remainingSeconds = totalSeconds,
-        prompt = null,
-        errorMessage = null;
+    : status = SketchSessionStatus.loadingPrompt,
+      remainingSeconds = totalSeconds,
+      prompt = null,
+      errorMessage = null;
 
   final SketchSessionStatus status;
   final int remainingSeconds;
@@ -41,8 +41,7 @@ class SketchSessionState extends Equatable {
   final ImagePrompt? prompt;
   final String? errorMessage;
 
-  double get progress =>
-      totalSeconds == 0 ? 0 : 1 - (remainingSeconds / totalSeconds);
+  double get progress => totalSeconds == 0 ? 0 : 1 - (remainingSeconds / totalSeconds);
 
   SketchSessionState copyWith({
     SketchSessionStatus? status,
@@ -62,6 +61,11 @@ class SketchSessionState extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [status, remainingSeconds, totalSeconds, prompt?.photoId, errorMessage];
+  List<Object?> get props => [
+    status,
+    remainingSeconds,
+    totalSeconds,
+    prompt?.photoId,
+    errorMessage,
+  ];
 }

@@ -31,7 +31,7 @@ class SettingsPage extends StatelessWidget {
           create: (_) => SettingsBloc(
             notifications: NotificationService.instance,
             prefs: snapshot.data!,
-          )..add(const SettingsLoaded()),
+          ),
           child: BlocProvider.value(
             value: streakBloc,
             child: const _SettingsView(),
@@ -57,9 +57,9 @@ class _SettingsView extends StatelessWidget {
                 title: const Text('Daily reminder'),
                 subtitle: const Text('Get a nudge to sketch today'),
                 value: state.notificationsEnabled,
-                onChanged: (v) => context
-                    .read<SettingsBloc>()
-                    .add(SettingsNotificationsToggled(v)),
+                onChanged: (v) => context.read<SettingsBloc>().add(
+                  SettingsNotificationsToggled(v),
+                ),
               ),
               ListTile(
                 title: const Text('Reminder time'),
@@ -72,9 +72,9 @@ class _SettingsView extends StatelessWidget {
                     initialTime: state.reminderTime,
                   );
                   if (picked != null && context.mounted) {
-                    context
-                        .read<SettingsBloc>()
-                        .add(SettingsReminderTimeChanged(picked));
+                    context.read<SettingsBloc>().add(
+                      SettingsReminderTimeChanged(picked),
+                    );
                   }
                 },
               ),
@@ -84,8 +84,7 @@ class _SettingsView extends StatelessWidget {
                   'Reset streak',
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
-                subtitle:
-                    const Text('Clear all progress. Useful for testing.'),
+                subtitle: const Text('Clear all progress. Useful for testing.'),
                 trailing: const Icon(Icons.delete_outline),
                 onTap: () => _confirmReset(context),
               ),
@@ -146,9 +145,9 @@ class _DebugCelebrationPreview extends StatelessWidget {
           child: Text(
             'Debug — Preview celebrations',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: colorScheme.secondary,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: colorScheme.secondary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         Padding(
@@ -170,10 +169,7 @@ class _DebugCelebrationPreview extends StatelessWidget {
                 ActionChip(
                   avatar: Text(def.emoji),
                   label: Text('${def.threshold}-day'),
-                  onPressed: () => showCelebrationDialog(
-                    context,
-                    threshold: def.threshold,
-                  ),
+                  onPressed: () => showCelebrationDialog(context, threshold: def.threshold),
                 ),
             ],
           ),
@@ -184,9 +180,9 @@ class _DebugCelebrationPreview extends StatelessWidget {
           child: Text(
             'Debug — Notifications',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: colorScheme.secondary,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: colorScheme.secondary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         Padding(
@@ -208,8 +204,7 @@ class _DebugCelebrationPreview extends StatelessWidget {
                 avatar: const Icon(Icons.notifications_active, size: 18),
                 label: const Text('Show now'),
                 onPressed: () async {
-                  await NotificationService.instance
-                      .requestPermissionsIfNeeded();
+                  await NotificationService.instance.requestPermissionsIfNeeded();
                   await NotificationService.instance.showTestNotification();
                 },
               ),
@@ -217,8 +212,7 @@ class _DebugCelebrationPreview extends StatelessWidget {
                 avatar: const Icon(Icons.schedule, size: 18),
                 label: const Text('Schedule in 10s'),
                 onPressed: () async {
-                  await NotificationService.instance
-                      .requestPermissionsIfNeeded();
+                  await NotificationService.instance.requestPermissionsIfNeeded();
                   await NotificationService.instance.scheduleDebugReminderIn(
                     delay: const Duration(seconds: 10),
                   );

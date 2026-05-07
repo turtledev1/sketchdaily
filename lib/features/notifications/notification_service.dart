@@ -19,13 +19,13 @@ class NotificationService {
 
   static const String channelId = 'sketchdaily_reminders';
   static const String channelName = 'Daily Sketch Reminders';
-  static const String channelDescription =
-      'Daily reminder to do your SketchDaily session.';
+  static const String channelDescription = 'Daily reminder to do your SketchDaily session.';
 
   static const int _dailyReminderId = 1001;
+  static const String _reminderTitle = 'Time to sketch';
+  static const String _reminderBody = "Five minutes and a pencil. Let's keep the streak going.";
 
-  final FlutterLocalNotificationsPlugin _plugin =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
 
@@ -37,13 +37,14 @@ class NotificationService {
     final tzInfo = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(tzInfo.identifier));
 
-    const androidInit = AndroidInitializationSettings('@drawable/ic_notification');
+    const androidInit = AndroidInitializationSettings(
+      '@drawable/ic_notification',
+    );
     const initSettings = InitializationSettings(android: androidInit);
     await _plugin.initialize(initSettings);
 
     if (!kIsWeb && Platform.isAndroid) {
-      final android = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       await android?.createNotificationChannel(
         const AndroidNotificationChannel(
           channelId,
@@ -60,8 +61,7 @@ class NotificationService {
   /// Android 13+ (SDK 33) requires runtime notification permission.
   Future<bool> requestPermissionsIfNeeded() async {
     if (kIsWeb || !Platform.isAndroid) return true;
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     final granted = await android?.requestNotificationsPermission();
     return granted ?? true;
   }
@@ -75,8 +75,8 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       _dailyReminderId,
-      'Time to sketch',
-      'Five minutes and a pencil. Let\'s keep the streak going.',
+      _reminderTitle,
+      _reminderBody,
       scheduled,
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -89,8 +89,7 @@ class NotificationService {
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -104,8 +103,8 @@ class NotificationService {
   Future<void> showTestNotification() async {
     await _plugin.show(
       9999,
-      'Time to sketch',
-      'Five minutes and a pencil. Let\'s keep the streak going.',
+      _reminderTitle,
+      _reminderBody,
       const NotificationDetails(
         android: AndroidNotificationDetails(
           channelId,
@@ -125,7 +124,7 @@ class NotificationService {
     final scheduled = tz.TZDateTime.now(tz.local).add(delay);
     await _plugin.zonedSchedule(
       _dailyReminderId,
-      'Time to sketch',
+      _reminderTitle,
       'Debug — scheduled via scheduleDebugReminderIn.',
       scheduled,
       const NotificationDetails(
@@ -138,8 +137,7 @@ class NotificationService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 

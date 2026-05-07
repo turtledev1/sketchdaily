@@ -19,6 +19,12 @@ class UnsplashConfig {
   static const String utmSource = 'sketchdaily';
   static const String utmMedium = 'referral';
 
+  static Uri photographerUri(String profileUrl) => Uri.parse('$profileUrl?utm_source=$utmSource&utm_medium=$utmMedium');
+
+  static Uri unsplashHomepageUri() => Uri.parse(
+    'https://unsplash.com/?utm_source=$utmSource&utm_medium=$utmMedium',
+  );
+
   factory UnsplashConfig.fromEnv() {
     final accessKey = dotenv.env['UNSPLASH_ACCESS_KEY'];
     if (accessKey == null || accessKey.isEmpty || accessKey == 'YOUR_ACCESS_KEY') {

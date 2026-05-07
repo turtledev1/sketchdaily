@@ -17,8 +17,8 @@ class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
   SketchSessionBloc({
     required PromptRepository promptRepository,
     int totalSeconds = 300,
-  })  : _prompts = promptRepository,
-        super(SketchSessionState.initial(totalSeconds: totalSeconds)) {
+  }) : _prompts = promptRepository,
+       super(SketchSessionState.initial(totalSeconds: totalSeconds)) {
     on<SketchSessionRequested>(_onRequested);
     on<SketchSessionPromptRefreshRequested>(_onPromptRefreshRequested);
     on<SketchSessionStarted>(_onStarted);
@@ -35,22 +35,28 @@ class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
     SketchSessionRequested event,
     Emitter<SketchSessionState> emit,
   ) async {
-    emit(state.copyWith(
-      status: SketchSessionStatus.loadingPrompt,
-      clearError: true,
-    ));
+    emit(
+      state.copyWith(
+        status: SketchSessionStatus.loadingPrompt,
+        clearError: true,
+      ),
+    );
     try {
       final prompt = await _prompts.getTodayPrompt();
-      emit(state.copyWith(
-        status: SketchSessionStatus.ready,
-        prompt: prompt,
-        remainingSeconds: state.totalSeconds,
-      ));
+      emit(
+        state.copyWith(
+          status: SketchSessionStatus.ready,
+          prompt: prompt,
+          remainingSeconds: state.totalSeconds,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: SketchSessionStatus.error,
-        errorMessage: 'Could not fetch a reference image. Check your connection.',
-      ));
+      emit(
+        state.copyWith(
+          status: SketchSessionStatus.error,
+          errorMessage: 'Could not fetch a reference image. Check your connection.',
+        ),
+      );
     }
   }
 
@@ -69,10 +75,7 @@ class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
       // status has moved past refreshingPrompt and they've locked in the
       // image they could see. Don't stomp on that with the new fetch.
       if (state.status != SketchSessionStatus.refreshingPrompt) return;
-      emit(state.copyWith(
-        status: SketchSessionStatus.ready,
-        prompt: prompt,
-      ));
+      emit(state.copyWith(status: SketchSessionStatus.ready, prompt: prompt));
     } catch (_) {
       // Refresh failure is non-destructive: keep the existing prompt and
       // drop back to ready. Punishing the user with an error screen for
@@ -96,10 +99,7 @@ class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
     _startTicker();
   }
 
-  void _onPaused(
-    SketchSessionPaused event,
-    Emitter<SketchSessionState> emit,
-  ) {
+  void _onPaused(SketchSessionPaused event, Emitter<SketchSessionState> emit) {
     if (state.status != SketchSessionStatus.running) return;
     _stopTicker();
     emit(state.copyWith(status: SketchSessionStatus.paused));
@@ -122,18 +122,17 @@ class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
     emit(state.copyWith(status: SketchSessionStatus.completed));
   }
 
-  void _onTick(
-    _SketchSessionTick event,
-    Emitter<SketchSessionState> emit,
-  ) {
+  void _onTick(_SketchSessionTick event, Emitter<SketchSessionState> emit) {
     if (state.status != SketchSessionStatus.running) return;
     final next = state.remainingSeconds - 1;
     if (next <= 0) {
       _stopTicker();
-      emit(state.copyWith(
-        remainingSeconds: 0,
-        status: SketchSessionStatus.completed,
-      ));
+      emit(
+        state.copyWith(
+          remainingSeconds: 0,
+          status: SketchSessionStatus.completed,
+        ),
+      );
     } else {
       emit(state.copyWith(remainingSeconds: next));
     }

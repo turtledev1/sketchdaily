@@ -33,16 +33,14 @@ class BadgeTile extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               definition.name,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
-              unlocked
-                  ? '${definition.threshold} days'
-                  : '$daysAway more',
+              unlocked ? '${definition.threshold} days' : '$daysAway more',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],

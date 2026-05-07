@@ -24,8 +24,7 @@ class HistoryHeatmap extends StatelessWidget {
     final startOfToday = DateTime(today.year, today.month, today.day);
 
     return BlocBuilder<StreakBloc, StreakState>(
-      buildWhen: (prev, curr) =>
-          prev.completedDates != curr.completedDates,
+      buildWhen: (prev, curr) => prev.completedDates != curr.completedDates,
       builder: (context, state) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,9 +32,9 @@ class HistoryHeatmap extends StatelessWidget {
             Text(
               'Last $days days',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.8),
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: colorScheme.onSurface.withValues(alpha: 0.8),
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 8),
             LayoutBuilder(
@@ -46,8 +45,7 @@ class HistoryHeatmap extends StatelessWidget {
                 const cols = 10;
                 final rows = (days + cols - 1) ~/ cols;
                 final spacing = 4.0;
-                final tileSize =
-                    (constraints.maxWidth - spacing * (cols - 1)) / cols;
+                final tileSize = (constraints.maxWidth - spacing * (cols - 1)) / cols;
                 return Column(
                   children: [
                     for (int r = 0; r < rows; r++)
@@ -92,19 +90,14 @@ class HistoryHeatmap extends StatelessWidget {
     // Fill left-to-right, top-to-bottom, oldest → newest. So the last cell
     // (bottom-right) is always "today".
     final offsetFromToday = (days - 1) - index;
-    final date =
-        startOfToday.subtract(Duration(days: offsetFromToday));
+    final date = startOfToday.subtract(Duration(days: offsetFromToday));
     final key = StreakRepository.formatDate(date);
     final done = completedDates.contains(key);
     final isToday = offsetFromToday == 0;
     final colorScheme = Theme.of(context).colorScheme;
 
-    final fill = done
-        ? colorScheme.primary
-        : colorScheme.surfaceContainerHighest;
-    final border = isToday
-        ? Border.all(color: colorScheme.primary, width: 1.5)
-        : null;
+    final fill = done ? colorScheme.primary : colorScheme.surfaceContainerHighest;
+    final border = isToday ? Border.all(color: colorScheme.primary, width: 1.5) : null;
 
     final tile = Container(
       width: tileSize,
@@ -117,8 +110,7 @@ class HistoryHeatmap extends StatelessWidget {
     );
 
     return Tooltip(
-      message:
-          '${DateFormat.yMMMd().format(date)} — ${done ? 'sketched' : 'missed'}',
+      message: '${DateFormat.yMMMd().format(date)} — ${done ? 'sketched' : 'missed'}',
       child: done
           // Wrap completed tiles so tapping replays the reference image.
           // Missed days have nothing to show, so they stay non-interactive.
@@ -142,8 +134,8 @@ class _Legend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final labelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: colorScheme.onSurface.withValues(alpha: 0.6),
-        );
+      color: colorScheme.onSurface.withValues(alpha: 0.6),
+    );
     return Row(
       children: [
         _swatch(colorScheme.surfaceContainerHighest),
@@ -158,11 +150,11 @@ class _Legend extends StatelessWidget {
   }
 
   Widget _swatch(Color color) => Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(3),
-        ),
-      );
+    width: 12,
+    height: 12,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(3),
+    ),
+  );
 }

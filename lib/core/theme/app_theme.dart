@@ -29,9 +29,6 @@ class AppTheme {
       seedColor: const Color(0xFFE87A3A),
       brightness: Brightness.dark,
     );
-    return ThemeData(
-      colorScheme: colorScheme,
-      useMaterial3: true,
-    );
+    return ThemeData(colorScheme: colorScheme, useMaterial3: true);
   }
 }

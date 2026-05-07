@@ -13,9 +13,7 @@ part 'streak_state.dart';
 /// survive cold starts instantly, without the async gap that a sqflite-only
 /// approach would impose on the home screen.
 class StreakBloc extends HydratedBloc<StreakEvent, StreakState> {
-  StreakBloc({required StreakRepository repository})
-      : _repository = repository,
-        super(const StreakState.initial()) {
+  StreakBloc({required StreakRepository repository}) : _repository = repository, super(const StreakState.initial()) {
     on<StreakSessionCompleted>(_onSessionCompleted);
     on<StreakMilestoneAcknowledged>(_onMilestoneAcknowledged);
     on<StreakResetRequested>(_onResetRequested);
@@ -43,13 +41,15 @@ class StreakBloc extends HydratedBloc<StreakEvent, StreakState> {
     }
 
     final yesterdayKey = StreakRepository.formatDate(
-      DateTime(event.completedAt.year, event.completedAt.month,
-          event.completedAt.day - 1),
+      DateTime(
+        event.completedAt.year,
+        event.completedAt.month,
+        event.completedAt.day - 1,
+      ),
     );
     final continued = state.completedDates.contains(yesterdayKey);
     final newStreak = continued ? state.currentStreak + 1 : 1;
-    final newLongest =
-        newStreak > state.longestStreak ? newStreak : state.longestStreak;
+    final newLongest = newStreak > state.longestStreak ? newStreak : state.longestStreak;
 
     final updatedDates = {...state.completedDates, todayKey};
 
@@ -58,22 +58,26 @@ class StreakBloc extends HydratedBloc<StreakEvent, StreakState> {
       current: newLongest,
     );
 
-    emit(state.copyWith(
-      currentStreak: newStreak,
-      longestStreak: newLongest,
-      completedDates: updatedDates,
-      pendingMilestone: crossed,
-    ));
+    emit(
+      state.copyWith(
+        currentStreak: newStreak,
+        longestStreak: newLongest,
+        completedDates: updatedDates,
+        pendingMilestone: crossed,
+      ),
+    );
   }
 
   void _onMilestoneAcknowledged(
     StreakMilestoneAcknowledged event,
     Emitter<StreakState> emit,
   ) {
-    emit(state.copyWith(
-      lastMilestoneCelebrated: event.threshold,
-      clearPendingMilestone: true,
-    ));
+    emit(
+      state.copyWith(
+        lastMilestoneCelebrated: event.threshold,
+        clearPendingMilestone: true,
+      ),
+    );
   }
 
   Future<void> _onResetRequested(
@@ -104,9 +108,7 @@ class StreakBloc extends HydratedBloc<StreakEvent, StreakState> {
       return StreakState(
         currentStreak: json['currentStreak'] as int? ?? 0,
         longestStreak: json['longestStreak'] as int? ?? 0,
-        completedDates: ((json['completedDates'] as List?) ?? const [])
-            .cast<String>()
-            .toSet(),
+        completedDates: ((json['completedDates'] as List?) ?? const []).cast<String>().toSet(),
         lastMilestoneCelebrated: json['lastMilestoneCelebrated'] as int? ?? 0,
         pendingMilestone: json['pendingMilestone'] as int?,
       );
@@ -117,10 +119,10 @@ class StreakBloc extends HydratedBloc<StreakEvent, StreakState> {
 
   @override
   Map<String, dynamic>? toJson(StreakState state) => {
-        'currentStreak': state.currentStreak,
-        'longestStreak': state.longestStreak,
-        'completedDates': state.completedDates.toList()..sort(),
-        'lastMilestoneCelebrated': state.lastMilestoneCelebrated,
-        'pendingMilestone': state.pendingMilestone,
-      };
+    'currentStreak': state.currentStreak,
+    'longestStreak': state.longestStreak,
+    'completedDates': state.completedDates.toList()..sort(),
+    'lastMilestoneCelebrated': state.lastMilestoneCelebrated,
+    'pendingMilestone': state.pendingMilestone,
+  };
 }

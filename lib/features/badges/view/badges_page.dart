@@ -8,8 +8,7 @@ import '../widgets/badge_tile.dart';
 class BadgesPage extends StatelessWidget {
   const BadgesPage({super.key});
 
-  static Route<void> route() =>
-      MaterialPageRoute(builder: (_) => const BadgesPage());
+  static Route<void> route() => MaterialPageRoute(builder: (_) => const BadgesPage());
 
   @override
   Widget build(BuildContext context) {
