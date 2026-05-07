@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../streak/bloc/streak_bloc.dart';
+import '../../streak/bloc/streak_cubit.dart';
 import '../../streak/repository/streak_repository.dart';
 import '../../streak/widgets/saved_session_dialog.dart';
 
 /// A compact 30-day "did you sketch?" heatmap.
 ///
-/// Sources the set of completed dates from [StreakBloc] rather than
+/// Sources the set of completed dates from [StreakCubit] rather than
 /// [StreakRepository], so it repaints instantly after a session completes
 /// without needing to re-read sqflite. The sqflite log remains the source
 /// of truth for richer views (session length, timestamps) not rendered here.
@@ -23,7 +23,7 @@ class HistoryHeatmap extends StatelessWidget {
     final today = DateTime.now();
     final startOfToday = DateTime(today.year, today.month, today.day);
 
-    return BlocBuilder<StreakBloc, StreakState>(
+    return BlocBuilder<StreakCubit, StreakState>(
       buildWhen: (prev, curr) => prev.completedDates != curr.completedDates,
       builder: (context, state) {
         return Column(

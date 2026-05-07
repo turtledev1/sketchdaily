@@ -5,8 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../prompts/repository/prompt_repository.dart';
-import '../../streak/bloc/streak_bloc.dart';
-import '../bloc/sketch_session_bloc.dart';
+import '../../streak/bloc/streak_cubit.dart';
+import '../bloc/sketch_session_cubit.dart';
 import '../widgets/countdown_ring.dart';
 
 class SketchSessionPage extends StatefulWidget {
@@ -17,8 +17,7 @@ class SketchSessionPage extends StatefulWidget {
   static Route<bool> route() {
     return MaterialPageRoute<bool>(
       builder: (context) => BlocProvider(
-        create: (ctx) =>
-            SketchSessionBloc(promptRepository: ctx.read<PromptRepository>())..add(const SketchSessionRequested()),
+        create: (ctx) => SketchSessionCubit(promptRepository: ctx.read<PromptRepository>())..requestSession(),
         child: const SketchSessionPage(),
       ),
     );
@@ -47,22 +46,20 @@ class _SketchSessionPageState extends State<SketchSessionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<SketchSessionBloc, SketchSessionState>(
+    return BlocListener<SketchSessionCubit, SketchSessionState>(
       listenWhen: (prev, curr) => prev.status != curr.status && curr.status == SketchSessionStatus.completed,
       listener: (context, state) {
-        final sessionBloc = context.read<SketchSessionBloc>();
+        final sessionBloc = context.read<SketchSessionCubit>();
         // Completion is only reachable from running/paused, which both
         // require a loaded prompt — so the bang here is a true invariant.
         final lockedPrompt = state.prompt!;
-        context.read<StreakBloc>().add(
-          StreakSessionCompleted(
-            completedAt: DateTime.now(),
-            durationSeconds: sessionBloc.elapsedSeconds(),
-            photoId: lockedPrompt.photoId,
-            imageUrl: lockedPrompt.imageUrl,
-            photographerName: lockedPrompt.photographerName,
-            photographerProfileUrl: lockedPrompt.photographerProfileUrl,
-          ),
+        context.read<StreakCubit>().sessionCompleted(
+          completedAt: DateTime.now(),
+          durationSeconds: sessionBloc.elapsedSeconds(),
+          photoId: lockedPrompt.photoId,
+          imageUrl: lockedPrompt.imageUrl,
+          photographerName: lockedPrompt.photographerName,
+          photographerProfileUrl: lockedPrompt.photographerProfileUrl,
         );
         // `true` signals to the home page that a session just completed so
         // it can show the "nice work" SnackBar there (away from this page,
@@ -73,31 +70,27 @@ class _SketchSessionPageState extends State<SketchSessionPage> {
         appBar: AppBar(
           title: const Text('Today\'s sketch'),
           actions: [
-            BlocBuilder<SketchSessionBloc, SketchSessionState>(
+            BlocBuilder<SketchSessionCubit, SketchSessionState>(
               // The button is enabled in pre-Start states (ready and
               // refreshingPrompt) and disabled once the timer starts.
               // Treating `refreshingPrompt` as "enabled" avoids the
               // enable→disable→enable color flicker on fast refreshes;
               // tapping refresh again during a refresh is a harmless
-              // no-op (the bloc handler ignores it).
+              // no-op (the cubit handler ignores it).
               buildWhen: (prev, curr) => _canRefresh(prev.status) != _canRefresh(curr.status),
               builder: (context, state) {
                 final canRefresh = _canRefresh(state.status);
                 return IconButton(
                   icon: const Icon(Icons.refresh),
                   tooltip: canRefresh ? 'Get a different image' : 'Image locked — already started',
-                  onPressed: canRefresh
-                      ? () => context.read<SketchSessionBloc>().add(
-                          const SketchSessionPromptRefreshRequested(),
-                        )
-                      : null,
+                  onPressed: canRefresh ? () => context.read<SketchSessionCubit>().refreshPrompt() : null,
                 );
               },
             ),
           ],
         ),
         body: SafeArea(
-          child: BlocBuilder<SketchSessionBloc, SketchSessionState>(
+          child: BlocBuilder<SketchSessionCubit, SketchSessionState>(
             builder: (context, state) {
               switch (state.status) {
                 case SketchSessionStatus.loadingPrompt:
@@ -121,7 +114,7 @@ class _SketchSessionPageState extends State<SketchSessionPage> {
 
 /// Refresh is allowed before the user locks in a prompt by tapping Start.
 /// Both `ready` and `refreshingPrompt` count: tapping refresh while a
-/// refresh is already in flight is a no-op at the bloc level.
+/// refresh is already in flight is a no-op at the cubit level.
 bool _canRefresh(SketchSessionStatus status) =>
     status == SketchSessionStatus.ready || status == SketchSessionStatus.refreshingPrompt;
 
@@ -145,9 +138,7 @@ class _ErrorView extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
-            onPressed: () => context.read<SketchSessionBloc>().add(
-              const SketchSessionRequested(),
-            ),
+            onPressed: () => context.read<SketchSessionCubit>().requestSession(),
             icon: const Icon(Icons.refresh),
             label: const Text('Retry'),
           ),
@@ -255,17 +246,17 @@ class _Controls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<SketchSessionBloc>();
+    final cubit = context.read<SketchSessionCubit>();
     switch (state.status) {
       case SketchSessionStatus.ready:
       case SketchSessionStatus.refreshingPrompt:
         // Keep the Start button visually identical during refresh.
         // Toggling onPressed enabled↔disabled triggers Material's color
         // transition, which plays back-and-forth on fast refreshes and
-        // reads as flicker. The bloc's _onStarted handles a Start tap
+        // reads as flicker. The cubit's start() handles a Start tap
         // mid-refresh by locking in the currently displayed image.
         return FilledButton.icon(
-          onPressed: () => bloc.add(const SketchSessionStarted()),
+          onPressed: cubit.start,
           icon: const Icon(Icons.play_arrow),
           label: const Text('Start 5-minute sketch'),
         );
@@ -274,13 +265,13 @@ class _Controls extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             OutlinedButton.icon(
-              onPressed: () => bloc.add(const SketchSessionPaused()),
+              onPressed: cubit.pause,
               icon: const Icon(Icons.pause),
               label: const Text('Pause'),
             ),
             const SizedBox(width: 12),
             FilledButton.icon(
-              onPressed: () => bloc.add(const SketchSessionFinishedEarly()),
+              onPressed: cubit.finishEarly,
               icon: const Icon(Icons.check),
               label: const Text('I\'m done'),
             ),
@@ -291,13 +282,13 @@ class _Controls extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             FilledButton.icon(
-              onPressed: () => bloc.add(const SketchSessionResumed()),
+              onPressed: cubit.resume,
               icon: const Icon(Icons.play_arrow),
               label: const Text('Resume'),
             ),
             const SizedBox(width: 12),
             OutlinedButton.icon(
-              onPressed: () => bloc.add(const SketchSessionFinishedEarly()),
+              onPressed: cubit.finishEarly,
               icon: const Icon(Icons.check),
               label: const Text('I\'m done'),
             ),

@@ -1,4 +1,6 @@
-part of 'streak_bloc.dart';
+import 'package:equatable/equatable.dart';
+
+import '../repository/streak_repository.dart';
 
 class StreakState extends Equatable {
   const StreakState({
@@ -29,8 +31,8 @@ class StreakState extends Equatable {
   final int lastMilestoneCelebrated;
 
   /// Set transiently after a session completion when a new milestone is crossed.
-  /// The UI watches this to trigger the celebration dialog, then dispatches
-  /// [StreakMilestoneAcknowledged] to clear it.
+  /// The UI watches this to trigger the celebration dialog, then calls
+  /// [StreakCubit.acknowledgeMilestone] to clear it.
   final int? pendingMilestone;
 
   StreakState copyWith({

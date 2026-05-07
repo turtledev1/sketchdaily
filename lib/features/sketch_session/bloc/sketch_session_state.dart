@@ -1,4 +1,6 @@
-part of 'sketch_session_bloc.dart';
+import 'package:equatable/equatable.dart';
+
+import '../../prompts/repository/prompt_repository.dart';
 
 enum SketchSessionStatus {
   /// First-time prompt load. No prompt is available yet — UI shows a

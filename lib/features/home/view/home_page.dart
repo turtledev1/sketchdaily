@@ -7,7 +7,7 @@ import '../../badges/view/badges_page.dart';
 import '../../celebration/view/celebration_dialog.dart';
 import '../../settings/view/settings_page.dart';
 import '../../sketch_session/view/sketch_session_page.dart';
-import '../../streak/bloc/streak_bloc.dart';
+import '../../streak/bloc/streak_cubit.dart';
 import '../../streak/widgets/saved_session_dialog.dart';
 import '../widgets/history_heatmap.dart';
 import '../widgets/streak_card.dart';
@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Pushes the session and, on successful completion, shows a toast.
-  /// The milestone celebration is handled separately by the StreakBloc
+  /// The milestone celebration is handled separately by the StreakCubit
   /// listener on [pendingMilestone], so we intentionally skip the SnackBar
   /// on milestone days — the dialog is the reward in that case.
   Future<void> _startSketch(BuildContext context) async {
@@ -47,7 +47,7 @@ class _HomePageState extends State<HomePage> {
     // them safely afterwards without a stale `context` reference.
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final streakBloc = context.read<StreakBloc>();
+    final streakBloc = context.read<StreakCubit>();
 
     final completed = await navigator.push(SketchSessionPage.route());
     if (!mounted || completed != true) return;
@@ -66,15 +66,13 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final today = DateFormat.yMMMMEEEEd().format(DateTime.now());
-    return BlocListener<StreakBloc, StreakState>(
+    return BlocListener<StreakCubit, StreakState>(
       listenWhen: (prev, curr) => curr.pendingMilestone != null && prev.pendingMilestone != curr.pendingMilestone,
       listener: (context, state) async {
         final threshold = state.pendingMilestone!;
         await showCelebrationDialog(context, threshold: threshold);
         if (context.mounted) {
-          context.read<StreakBloc>().add(
-            StreakMilestoneAcknowledged(threshold),
-          );
+          context.read<StreakCubit>().acknowledgeMilestone(threshold);
         }
       },
       child: Scaffold(
@@ -96,7 +94,7 @@ class _HomePageState extends State<HomePage> {
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: BlocBuilder<StreakBloc, StreakState>(
+            child: BlocBuilder<StreakCubit, StreakState>(
               builder: (context, state) {
                 final completedToday = state.isCompletedOn(DateTime.now());
                 return Column(

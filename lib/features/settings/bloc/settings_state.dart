@@ -1,4 +1,6 @@
-part of 'settings_bloc.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsState extends Equatable {
   const SettingsState({
@@ -6,13 +8,17 @@ class SettingsState extends Equatable {
     required this.notificationsEnabled,
   });
 
+  static const String _keyHour = 'reminder_hour';
+  static const String _keyMinute = 'reminder_minute';
+  static const String _keyEnabled = 'notifications_enabled';
+
   factory SettingsState.fromPrefs(SharedPreferences prefs) {
     return SettingsState(
       reminderTime: TimeOfDay(
-        hour: prefs.getInt(SettingsBloc._keyHour) ?? 20,
-        minute: prefs.getInt(SettingsBloc._keyMinute) ?? 0,
+        hour: prefs.getInt(_keyHour) ?? 20,
+        minute: prefs.getInt(_keyMinute) ?? 0,
       ),
-      notificationsEnabled: prefs.getBool(SettingsBloc._keyEnabled) ?? true,
+      notificationsEnabled: prefs.getBool(_keyEnabled) ?? true,
     );
   }
 

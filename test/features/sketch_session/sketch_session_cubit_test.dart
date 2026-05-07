@@ -2,7 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sketchdaily/features/prompts/repository/prompt_repository.dart';
-import 'package:sketchdaily/features/sketch_session/bloc/sketch_session_bloc.dart';
+import 'package:sketchdaily/features/sketch_session/bloc/sketch_session_cubit.dart';
 
 class _MockPromptRepository extends Mock implements PromptRepository {}
 
@@ -30,15 +30,14 @@ void main() {
     when(() => prompts.trackUsage(any())).thenAnswer((_) async {});
   });
 
-  group('SketchSessionRequested', () {
-    blocTest<SketchSessionBloc, SketchSessionState>(
+  group('requestSession', () {
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'loads prompt and transitions loadingPrompt -> ready',
       setUp: () {
-        when(() => prompts.getTodayPrompt())
-            .thenAnswer((_) async => _fakePrompt);
+        when(() => prompts.getTodayPrompt()).thenAnswer((_) async => _fakePrompt);
       },
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) => bloc.add(const SketchSessionRequested()),
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) => cubit.requestSession(),
       expect: () => [
         // Initial state is already `loadingPrompt`, so the handler first
         // re-emits loadingPrompt with `clearError`, then emits `ready`.
@@ -52,14 +51,13 @@ void main() {
       ],
     );
 
-    blocTest<SketchSessionBloc, SketchSessionState>(
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'emits error state when Unsplash fetch throws',
       setUp: () {
-        when(() => prompts.getTodayPrompt())
-            .thenThrow(Exception('boom'));
+        when(() => prompts.getTodayPrompt()).thenThrow(Exception('boom'));
       },
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) => bloc.add(const SketchSessionRequested()),
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) => cubit.requestSession(),
       expect: () => [
         isA<SketchSessionState>()
             .having((s) => s.status, 'status', SketchSessionStatus.loadingPrompt),
@@ -70,19 +68,18 @@ void main() {
     );
   });
 
-  group('SketchSessionStarted', () {
-    blocTest<SketchSessionBloc, SketchSessionState>(
+  group('start', () {
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'fires Unsplash usage ping and transitions ready -> running',
       setUp: () {
-        when(() => prompts.getTodayPrompt())
-            .thenAnswer((_) async => _fakePrompt);
+        when(() => prompts.getTodayPrompt()).thenAnswer((_) async => _fakePrompt);
       },
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) async {
-        bloc.add(const SketchSessionRequested());
-        // Let the async load settle before Started so state.prompt != null.
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) async {
+        cubit.requestSession();
+        // Let the async load settle before start() so state.prompt != null.
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionStarted());
+        cubit.start();
       },
       skip: 2, // skip the loadingPrompt + ready emissions
       expect: () => [
@@ -94,27 +91,26 @@ void main() {
       },
     );
 
-    blocTest<SketchSessionBloc, SketchSessionState>(
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'no-op when prompt is not yet loaded',
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) => bloc.add(const SketchSessionStarted()),
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) => cubit.start(),
       expect: () => const <SketchSessionState>[],
       verify: (_) => verifyNever(() => prompts.trackUsage(any())),
     );
   });
 
-  group('SketchSessionPromptRefreshRequested', () {
-    blocTest<SketchSessionBloc, SketchSessionState>(
+  group('refreshPrompt', () {
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'transitions ready -> refreshingPrompt -> ready with a new prompt',
       setUp: () {
-        when(() => prompts.getTodayPrompt())
-            .thenAnswer((_) async => _fakePrompt);
+        when(() => prompts.getTodayPrompt()).thenAnswer((_) async => _fakePrompt);
       },
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) async {
-        bloc.add(const SketchSessionRequested());
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) async {
+        cubit.requestSession();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionPromptRefreshRequested());
+        cubit.refreshPrompt();
       },
       skip: 2, // initial loadingPrompt + ready
       expect: () => [
@@ -132,7 +128,7 @@ void main() {
       },
     );
 
-    blocTest<SketchSessionBloc, SketchSessionState>(
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'falls back to ready with the previous prompt when refresh fetch fails',
       setUp: () {
         var calls = 0;
@@ -143,11 +139,11 @@ void main() {
           throw Exception('network down');
         });
       },
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) async {
-        bloc.add(const SketchSessionRequested());
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) async {
+        cubit.requestSession();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionPromptRefreshRequested());
+        cubit.refreshPrompt();
       },
       skip: 2,
       expect: () => [
@@ -160,7 +156,7 @@ void main() {
       ],
     );
 
-    blocTest<SketchSessionBloc, SketchSessionState>(
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'tapping Start mid-refresh locks the current image — '
       'late-arriving fetch is discarded',
       setUp: () {
@@ -175,19 +171,18 @@ void main() {
             imageUrl: 'https://images.unsplash.com/photo-xyz?ixid=test',
             photographerName: 'Late Arrival',
             photographerProfileUrl: 'https://unsplash.com/@late',
-            downloadLocation:
-                'https://api.unsplash.com/photos/xyz/download',
+            downloadLocation: 'https://api.unsplash.com/photos/xyz/download',
           );
         });
       },
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) async {
-        bloc.add(const SketchSessionRequested());
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) async {
+        cubit.requestSession();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionPromptRefreshRequested());
+        cubit.refreshPrompt();
         await Future<void>.delayed(Duration.zero);
         // User taps Start while the refresh fetch is still in flight.
-        bloc.add(const SketchSessionStarted());
+        cubit.start();
         // Let the late refresh fetch resolve.
         await Future<void>.delayed(const Duration(milliseconds: 60));
       },
@@ -201,19 +196,18 @@ void main() {
       ],
     );
 
-    blocTest<SketchSessionBloc, SketchSessionState>(
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'is ignored once the session is running (image is locked)',
       setUp: () {
-        when(() => prompts.getTodayPrompt())
-            .thenAnswer((_) async => _fakePrompt);
+        when(() => prompts.getTodayPrompt()).thenAnswer((_) async => _fakePrompt);
       },
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) async {
-        bloc.add(const SketchSessionRequested());
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) async {
+        cubit.requestSession();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionStarted());
+        cubit.start();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionPromptRefreshRequested());
+        cubit.refreshPrompt();
       },
       skip: 3, // loadingPrompt, ready, running
       expect: () => const <SketchSessionState>[],
@@ -224,21 +218,20 @@ void main() {
   });
 
   group('pause / resume', () {
-    blocTest<SketchSessionBloc, SketchSessionState>(
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'running -> paused -> running',
       setUp: () {
-        when(() => prompts.getTodayPrompt())
-            .thenAnswer((_) async => _fakePrompt);
+        when(() => prompts.getTodayPrompt()).thenAnswer((_) async => _fakePrompt);
       },
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) async {
-        bloc.add(const SketchSessionRequested());
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) async {
+        cubit.requestSession();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionStarted());
+        cubit.start();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionPaused());
+        cubit.pause();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionResumed());
+        cubit.resume();
       },
       skip: 3, // loadingPrompt, ready, running
       expect: () => [
@@ -249,38 +242,36 @@ void main() {
       ],
     );
 
-    blocTest<SketchSessionBloc, SketchSessionState>(
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'pause is ignored outside running',
       setUp: () {
-        when(() => prompts.getTodayPrompt())
-            .thenAnswer((_) async => _fakePrompt);
+        when(() => prompts.getTodayPrompt()).thenAnswer((_) async => _fakePrompt);
       },
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) async {
-        bloc.add(const SketchSessionRequested());
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) async {
+        cubit.requestSession();
         await Future<void>.delayed(Duration.zero);
         // Still in `ready` — pause should be a no-op.
-        bloc.add(const SketchSessionPaused());
+        cubit.pause();
       },
       skip: 2,
       expect: () => const <SketchSessionState>[],
     );
   });
 
-  group('SketchSessionFinishedEarly', () {
-    blocTest<SketchSessionBloc, SketchSessionState>(
+  group('finishEarly', () {
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'running -> completed without waiting for ticks',
       setUp: () {
-        when(() => prompts.getTodayPrompt())
-            .thenAnswer((_) async => _fakePrompt);
+        when(() => prompts.getTodayPrompt()).thenAnswer((_) async => _fakePrompt);
       },
-      build: () => SketchSessionBloc(promptRepository: prompts),
-      act: (bloc) async {
-        bloc.add(const SketchSessionRequested());
+      build: () => SketchSessionCubit(promptRepository: prompts),
+      act: (cubit) async {
+        cubit.requestSession();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionStarted());
+        cubit.start();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionFinishedEarly());
+        cubit.finishEarly();
       },
       skip: 3,
       expect: () => [
@@ -291,20 +282,19 @@ void main() {
   });
 
   group('tick', () {
-    blocTest<SketchSessionBloc, SketchSessionState>(
+    blocTest<SketchSessionCubit, SketchSessionState>(
       'reaches completed when timer hits zero',
       setUp: () {
-        when(() => prompts.getTodayPrompt())
-            .thenAnswer((_) async => _fakePrompt);
+        when(() => prompts.getTodayPrompt()).thenAnswer((_) async => _fakePrompt);
       },
       // Short session so we only need one real tick (~1s) to hit zero.
-      build: () => SketchSessionBloc(promptRepository: prompts, totalSeconds: 1),
-      act: (bloc) async {
-        bloc.add(const SketchSessionRequested());
+      build: () => SketchSessionCubit(promptRepository: prompts, totalSeconds: 1),
+      act: (cubit) async {
+        cubit.requestSession();
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const SketchSessionStarted());
+        cubit.start();
       },
-      // Give the real Timer.periodic one shot to fire and the bloc to emit.
+      // Give the real Timer.periodic one shot to fire and the cubit to emit.
       wait: const Duration(milliseconds: 1200),
       skip: 3, // loadingPrompt, ready, running
       expect: () => [
@@ -317,14 +307,13 @@ void main() {
 
   group('elapsedSeconds', () {
     test('reports totalSeconds - remainingSeconds', () async {
-      when(() => prompts.getTodayPrompt())
-          .thenAnswer((_) async => _fakePrompt);
-      final bloc = SketchSessionBloc(promptRepository: prompts, totalSeconds: 300);
-      bloc.add(const SketchSessionRequested());
+      when(() => prompts.getTodayPrompt()).thenAnswer((_) async => _fakePrompt);
+      final cubit = SketchSessionCubit(promptRepository: prompts, totalSeconds: 300);
+      cubit.requestSession();
       await Future<void>.delayed(Duration.zero);
       // Still at full remaining → elapsed == 0.
-      expect(bloc.elapsedSeconds(), 0);
-      await bloc.close();
+      expect(cubit.elapsedSeconds(), 0);
+      await cubit.close();
     });
   });
 }

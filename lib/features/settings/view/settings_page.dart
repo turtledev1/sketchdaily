@@ -6,8 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../badges/model/badge_definition.dart';
 import '../../celebration/view/celebration_dialog.dart';
 import '../../notifications/notification_service.dart';
-import '../../streak/bloc/streak_bloc.dart';
-import '../bloc/settings_bloc.dart';
+import '../../streak/bloc/streak_cubit.dart';
+import '../bloc/settings_cubit.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -18,24 +18,19 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final streakBloc = context.read<StreakBloc>();
+    final streakBloc = context.read<StreakCubit>();
     return FutureBuilder<SharedPreferences>(
       future: SharedPreferences.getInstance(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
         return BlocProvider(
-          create: (_) => SettingsBloc(
+          create: (_) => SettingsCubit(
             notifications: NotificationService.instance,
             prefs: snapshot.data!,
           ),
-          child: BlocProvider.value(
-            value: streakBloc,
-            child: const _SettingsView(),
-          ),
+          child: BlocProvider.value(value: streakBloc, child: const _SettingsView()),
         );
       },
     );
@@ -49,7 +44,7 @@ class _SettingsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      body: BlocBuilder<SettingsBloc, SettingsState>(
+      body: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, state) {
           return ListView(
             children: [
@@ -57,9 +52,7 @@ class _SettingsView extends StatelessWidget {
                 title: const Text('Daily reminder'),
                 subtitle: const Text('Get a nudge to sketch today'),
                 value: state.notificationsEnabled,
-                onChanged: (v) => context.read<SettingsBloc>().add(
-                  SettingsNotificationsToggled(v),
-                ),
+                onChanged: (v) => context.read<SettingsCubit>().toggleNotifications(v),
               ),
               ListTile(
                 title: const Text('Reminder time'),
@@ -72,25 +65,25 @@ class _SettingsView extends StatelessWidget {
                     initialTime: state.reminderTime,
                   );
                   if (picked != null && context.mounted) {
-                    context.read<SettingsBloc>().add(
-                      SettingsReminderTimeChanged(picked),
-                    );
+                    context.read<SettingsCubit>().setReminderTime(picked);
                   }
                 },
               ),
-              const Divider(),
-              ListTile(
-                title: Text(
-                  'Reset streak',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-                subtitle: const Text('Clear all progress. Useful for testing.'),
-                trailing: const Icon(Icons.delete_outline),
-                onTap: () => _confirmReset(context),
-              ),
               if (kDebugMode) ...[
                 const Divider(),
-                const _DebugCelebrationPreview(),
+                ListTile(
+                  title: Text(
+                    'Reset streak',
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                  subtitle: const Text('Clear all progress. Useful for testing.'),
+                  trailing: const Icon(Icons.delete_outline),
+                  onTap: () => _confirmReset(context),
+                ),
+                const Divider(),
+                const _DebugCelebrationSection(),
+                const Divider(),
+                const _DebugNotificationsSection(),
               ],
             ],
           );
@@ -121,47 +114,37 @@ class _SettingsView extends StatelessWidget {
       ),
     );
     if (confirmed == true && context.mounted) {
-      context.read<StreakBloc>().add(const StreakResetRequested());
+      context.read<StreakCubit>().reset();
     }
   }
 }
 
-/// Debug-only section that fires each milestone's celebration dialog on
-/// demand, so we can verify visuals without waiting for real streaks.
-///
-/// Guarded by `kDebugMode` at the call site — release builds tree-shake this
-/// widget entirely.
-class _DebugCelebrationPreview extends StatelessWidget {
-  const _DebugCelebrationPreview();
+class _DebugCelebrationSection extends StatelessWidget {
+  const _DebugCelebrationSection();
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: Text(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
             'Debug — Preview celebrations',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               color: colorScheme.secondary,
               fontWeight: FontWeight.w700,
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Fire a celebration dialog with the exact intensity tier for each '
-            'badge threshold. Does not affect your streak.',
+          const SizedBox(height: 4),
+          Text(
+            'Fire each milestone dialog at its exact intensity tier. '
+            'Does not affect your streak.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
-        ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Wrap(
+          const SizedBox(height: 8),
+          Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -173,30 +156,38 @@ class _DebugCelebrationPreview extends StatelessWidget {
                 ),
             ],
           ),
-        ),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: Text(
+        ],
+      ),
+    );
+  }
+}
+
+class _DebugNotificationsSection extends StatelessWidget {
+  const _DebugNotificationsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
             'Debug — Notifications',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               color: colorScheme.secondary,
               fontWeight: FontWeight.w700,
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
+          const SizedBox(height: 4),
+          Text(
             'Show a test notification immediately, or schedule one a few '
             'seconds out to verify the real scheduler path.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
-        ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Wrap(
+          const SizedBox(height: 8),
+          Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -230,9 +221,8 @@ class _DebugCelebrationPreview extends StatelessWidget {
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 16),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -9,7 +9,7 @@ import 'core/config/unsplash_config.dart';
 import 'features/notifications/notification_service.dart';
 import 'features/prompts/repository/prompt_repository.dart';
 import 'features/prompts/repository/unsplash_client.dart';
-import 'features/streak/bloc/streak_bloc.dart';
+import 'features/streak/bloc/streak_cubit.dart';
 import 'features/streak/repository/streak_repository.dart';
 
 Future<void> main() async {
@@ -39,7 +39,7 @@ Future<void> main() async {
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => StreakBloc(repository: streakRepository)),
+          BlocProvider(create: (_) => StreakCubit(repository: streakRepository)),
         ],
         child: const SketchDailyApp(),
       ),

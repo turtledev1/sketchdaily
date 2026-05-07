@@ -30,7 +30,7 @@ class SketchSessionRecord {
 /// Writes and reads a per-day log of completed sketch sessions.
 ///
 /// Hydrated state (current streak, longest streak, set of completed dates)
-/// lives in [StreakBloc]. This repository is the append-only history log —
+/// lives in [StreakCubit]. This repository is the append-only history log —
 /// future "show my last 30 days" views will read from here.
 class StreakRepository {
   StreakRepository();

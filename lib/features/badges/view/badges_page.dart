@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../streak/bloc/streak_bloc.dart';
+import '../../streak/bloc/streak_cubit.dart';
 import '../model/badge_definition.dart';
 import '../widgets/badge_tile.dart';
 
@@ -14,7 +14,7 @@ class BadgesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Badges')),
-      body: BlocBuilder<StreakBloc, StreakState>(
+      body: BlocBuilder<StreakCubit, StreakState>(
         builder: (context, state) {
           final longest = state.longestStreak;
           return GridView.builder(

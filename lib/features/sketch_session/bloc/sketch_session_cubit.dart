@@ -1,46 +1,29 @@
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../prompts/repository/prompt_repository.dart';
+import 'sketch_session_state.dart';
 
-part 'sketch_session_event.dart';
-part 'sketch_session_state.dart';
+export 'sketch_session_state.dart';
 
 /// Drives a single 5-minute sketching session:
 ///   loadingPrompt -> (ready | error)
 ///   ready -> running
 ///   running <-> paused
 ///   running -> completed (timer hit zero OR user tapped "I'm done")
-class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
-  SketchSessionBloc({
+class SketchSessionCubit extends Cubit<SketchSessionState> {
+  SketchSessionCubit({
     required PromptRepository promptRepository,
     int totalSeconds = 300,
   }) : _prompts = promptRepository,
-       super(SketchSessionState.initial(totalSeconds: totalSeconds)) {
-    on<SketchSessionRequested>(_onRequested);
-    on<SketchSessionPromptRefreshRequested>(_onPromptRefreshRequested);
-    on<SketchSessionStarted>(_onStarted);
-    on<SketchSessionPaused>(_onPaused);
-    on<SketchSessionResumed>(_onResumed);
-    on<SketchSessionFinishedEarly>(_onFinishedEarly);
-    on<_SketchSessionTick>(_onTick);
-  }
+       super(SketchSessionState.initial(totalSeconds: totalSeconds));
 
   final PromptRepository _prompts;
   Timer? _ticker;
 
-  Future<void> _onRequested(
-    SketchSessionRequested event,
-    Emitter<SketchSessionState> emit,
-  ) async {
-    emit(
-      state.copyWith(
-        status: SketchSessionStatus.loadingPrompt,
-        clearError: true,
-      ),
-    );
+  Future<void> requestSession() async {
+    emit(state.copyWith(status: SketchSessionStatus.loadingPrompt, clearError: true));
     try {
       final prompt = await _prompts.getTodayPrompt();
       emit(
@@ -50,7 +33,7 @@ class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
           remainingSeconds: state.totalSeconds,
         ),
       );
-    } catch (e) {
+    } catch (_) {
       emit(
         state.copyWith(
           status: SketchSessionStatus.error,
@@ -60,10 +43,7 @@ class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
     }
   }
 
-  Future<void> _onPromptRefreshRequested(
-    SketchSessionPromptRefreshRequested event,
-    Emitter<SketchSessionState> emit,
-  ) async {
+  Future<void> refreshPrompt() async {
     // Lock the image once the user has committed to it. Refresh is a
     // pre-Start affordance only — refreshing mid-session would discard
     // the user's in-progress sketch and leak their session timer.
@@ -86,10 +66,7 @@ class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
     }
   }
 
-  Future<void> _onStarted(
-    SketchSessionStarted event,
-    Emitter<SketchSessionState> emit,
-  ) async {
+  void start() {
     if (state.prompt == null) return;
     // Fire-and-forget the Unsplash usage ping — required by their guidelines
     // whenever a photo is "used". We don't await because a slow tracker shouldn't
@@ -99,40 +76,29 @@ class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
     _startTicker();
   }
 
-  void _onPaused(SketchSessionPaused event, Emitter<SketchSessionState> emit) {
+  void pause() {
     if (state.status != SketchSessionStatus.running) return;
     _stopTicker();
     emit(state.copyWith(status: SketchSessionStatus.paused));
   }
 
-  void _onResumed(
-    SketchSessionResumed event,
-    Emitter<SketchSessionState> emit,
-  ) {
+  void resume() {
     if (state.status != SketchSessionStatus.paused) return;
     emit(state.copyWith(status: SketchSessionStatus.running));
     _startTicker();
   }
 
-  void _onFinishedEarly(
-    SketchSessionFinishedEarly event,
-    Emitter<SketchSessionState> emit,
-  ) {
+  void finishEarly() {
     _stopTicker();
     emit(state.copyWith(status: SketchSessionStatus.completed));
   }
 
-  void _onTick(_SketchSessionTick event, Emitter<SketchSessionState> emit) {
+  void _tick() {
     if (state.status != SketchSessionStatus.running) return;
     final next = state.remainingSeconds - 1;
     if (next <= 0) {
       _stopTicker();
-      emit(
-        state.copyWith(
-          remainingSeconds: 0,
-          status: SketchSessionStatus.completed,
-        ),
-      );
+      emit(state.copyWith(remainingSeconds: 0, status: SketchSessionStatus.completed));
     } else {
       emit(state.copyWith(remainingSeconds: next));
     }
@@ -140,9 +106,7 @@ class SketchSessionBloc extends Bloc<SketchSessionEvent, SketchSessionState> {
 
   void _startTicker() {
     _ticker?.cancel();
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      add(const _SketchSessionTick());
-    });
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
   void _stopTicker() {
