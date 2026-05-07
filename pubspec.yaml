@@ -1,0 +1,66 @@
+name: sketchdaily
+description: "Daily sketching habit tracker with Unsplash reference images, reminders, streaks, and badges."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_bloc: ^8.1.6
+  hydrated_bloc: ^9.1.5
+  equatable: ^2.0.5
+
+  # Networking / Unsplash
+  http: ^1.2.2
+  cached_network_image: ^3.4.1
+  url_launcher: ^6.3.0
+  connectivity_plus: ^6.0.5
+
+  # Storage
+  path_provider: ^2.1.4
+  path: ^1.9.0
+  sqflite: ^2.3.3
+  shared_preferences: ^2.3.2
+
+  # Notifications
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
+  flutter_timezone: ^5.0.2
+
+  # Config
+  flutter_dotenv: ^5.2.1
+  intl: ^0.19.0
+
+  # Celebration
+  confetti: ^0.7.0
+
+  # Keep screen awake during a sketch session
+  wakelock_plus: ^1.2.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
+    - assets/icon/
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon/pencil.png"
+  remove_alpha_ios: true
+  background_color_ios: "#FFFFFF"
