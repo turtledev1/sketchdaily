@@ -59,8 +59,7 @@ void main() {
       build: () => SketchSessionCubit(promptRepository: prompts),
       act: (cubit) => cubit.requestSession(),
       expect: () => [
-        isA<SketchSessionState>()
-            .having((s) => s.status, 'status', SketchSessionStatus.loadingPrompt),
+        isA<SketchSessionState>().having((s) => s.status, 'status', SketchSessionStatus.loadingPrompt),
         isA<SketchSessionState>()
             .having((s) => s.status, 'status', SketchSessionStatus.error)
             .having((s) => s.errorMessage, 'errorMessage', isNotNull),
@@ -83,8 +82,7 @@ void main() {
       },
       skip: 2, // skip the loadingPrompt + ready emissions
       expect: () => [
-        isA<SketchSessionState>()
-            .having((s) => s.status, 'status', SketchSessionStatus.running),
+        isA<SketchSessionState>().having((s) => s.status, 'status', SketchSessionStatus.running),
       ],
       verify: (_) {
         verify(() => prompts.trackUsage(any(that: isA<ImagePrompt>()))).called(1);
@@ -147,8 +145,7 @@ void main() {
       },
       skip: 2,
       expect: () => [
-        isA<SketchSessionState>()
-            .having((s) => s.status, 'status', SketchSessionStatus.refreshingPrompt),
+        isA<SketchSessionState>().having((s) => s.status, 'status', SketchSessionStatus.refreshingPrompt),
         // Refresh failure must be non-destructive: same prompt, status ready.
         isA<SketchSessionState>()
             .having((s) => s.status, 'status', SketchSessionStatus.ready)
@@ -235,10 +232,8 @@ void main() {
       },
       skip: 3, // loadingPrompt, ready, running
       expect: () => [
-        isA<SketchSessionState>()
-            .having((s) => s.status, 'status', SketchSessionStatus.paused),
-        isA<SketchSessionState>()
-            .having((s) => s.status, 'status', SketchSessionStatus.running),
+        isA<SketchSessionState>().having((s) => s.status, 'status', SketchSessionStatus.paused),
+        isA<SketchSessionState>().having((s) => s.status, 'status', SketchSessionStatus.running),
       ],
     );
 
@@ -275,8 +270,7 @@ void main() {
       },
       skip: 3,
       expect: () => [
-        isA<SketchSessionState>()
-            .having((s) => s.status, 'status', SketchSessionStatus.completed),
+        isA<SketchSessionState>().having((s) => s.status, 'status', SketchSessionStatus.completed),
       ],
     );
   });

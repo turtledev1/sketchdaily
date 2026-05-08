@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../badges/model/badge_definition.dart';
 import '../../celebration/view/celebration_dialog.dart';
@@ -18,21 +17,12 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final streakBloc = context.read<StreakCubit>();
-    return FutureBuilder<SharedPreferences>(
-      future: SharedPreferences.getInstance(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-        return BlocProvider(
-          create: (_) => SettingsCubit(
-            notifications: NotificationService.instance,
-            prefs: snapshot.data!,
-          ),
-          child: BlocProvider.value(value: streakBloc, child: const _SettingsView()),
-        );
-      },
+    return BlocProvider.value(
+      value: context.read<SettingsCubit>(),
+      child: BlocProvider.value(
+        value: context.read<StreakCubit>(),
+        child: const _SettingsView(),
+      ),
     );
   }
 }

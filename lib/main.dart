@@ -3,12 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/config/unsplash_config.dart';
 import 'features/notifications/notification_service.dart';
 import 'features/prompts/repository/prompt_repository.dart';
 import 'features/prompts/repository/unsplash_client.dart';
+import 'features/settings/bloc/settings_cubit.dart';
 import 'features/streak/bloc/streak_cubit.dart';
 import 'features/streak/repository/streak_repository.dart';
 
@@ -25,6 +27,8 @@ Future<void> main() async {
   // Ask for POST_NOTIFICATIONS on Android 13+. Safe to call repeatedly.
   await NotificationService.instance.requestPermissionsIfNeeded();
 
+  final prefs = await SharedPreferences.getInstance();
+
   final unsplashConfig = UnsplashConfig.fromEnv();
   final unsplashClient = UnsplashClient(config: unsplashConfig);
   final promptRepository = PromptRepository(client: unsplashClient);
@@ -40,6 +44,12 @@ Future<void> main() async {
       child: MultiBlocProvider(
         providers: [
           BlocProvider(create: (_) => StreakCubit(repository: streakRepository)),
+          BlocProvider(
+            create: (_) => SettingsCubit(
+              notifications: NotificationService.instance,
+              prefs: prefs,
+            ),
+          ),
         ],
         child: const SketchDailyApp(),
       ),

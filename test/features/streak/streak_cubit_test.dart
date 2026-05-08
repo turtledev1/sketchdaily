@@ -50,15 +50,14 @@ void main() {
 
   DateTime at(int y, int m, int d) => DateTime(y, m, d, 10);
 
-  void completion(StreakCubit cubit, DateTime completedAt) =>
-      cubit.sessionCompleted(
-        completedAt: completedAt,
-        durationSeconds: 300,
-        photoId: 'abc123',
-        imageUrl: 'https://images.unsplash.com/photo-abc?ixid=test',
-        photographerName: 'Ansel Example',
-        photographerProfileUrl: 'https://unsplash.com/@ansel',
-      );
+  void completion(StreakCubit cubit, DateTime completedAt) => cubit.sessionCompleted(
+    completedAt: completedAt,
+    durationSeconds: 300,
+    photoId: 'abc123',
+    imageUrl: 'https://images.unsplash.com/photo-abc?ixid=test',
+    photographerName: 'Ansel Example',
+    photographerProfileUrl: 'https://unsplash.com/@ansel',
+  );
 
   group('sessionCompleted', () {
     blocTest<StreakCubit, StreakState>(
@@ -112,9 +111,7 @@ void main() {
       ),
       act: (cubit) => completion(cubit, at(2026, 1, 1)), // gap after 2025-12-30
       expect: () => [
-        isA<StreakState>()
-            .having((s) => s.currentStreak, 'current', 1)
-            .having((s) => s.longestStreak, 'longest', 5),
+        isA<StreakState>().having((s) => s.currentStreak, 'current', 1).having((s) => s.longestStreak, 'longest', 5),
       ],
     );
 
