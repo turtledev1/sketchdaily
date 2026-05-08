@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../badges/model/badge_definition.dart';
 import '../../celebration/view/celebration_dialog.dart';
 import '../../notifications/notification_service.dart';
+import '../../prompts/repository/prompt_repository.dart';
 import '../../streak/bloc/streak_cubit.dart';
 import '../bloc/settings_cubit.dart';
 
@@ -59,6 +60,8 @@ class _SettingsView extends StatelessWidget {
                   }
                 },
               ),
+              const Divider(),
+              const _CategorySection(),
               if (kDebugMode) ...[
                 const Divider(),
                 ListTile(
@@ -106,6 +109,53 @@ class _SettingsView extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       context.read<StreakCubit>().reset();
     }
+  }
+}
+
+class _CategorySection extends StatelessWidget {
+  const _CategorySection();
+
+  static String _toLabel(String category) => category[0].toUpperCase() + category.substring(1);
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      buildWhen: (prev, next) => prev.enabledCategories != next.enabledCategories,
+      builder: (context, state) {
+        final enabled = state.enabledCategories;
+        final isLastEnabled = enabled.length == 1;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Drawing categories',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Choose which subjects appear in your daily prompt.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              for (final category in PromptRepository.allCategories)
+                CheckboxListTile(
+                  title: Text(_toLabel(category)),
+                  value: enabled.contains(category),
+                  onChanged: (isLastEnabled && enabled.contains(category))
+                      ? null
+                      : (value) => context.read<SettingsCubit>().toggleCategory(category, enabled: value ?? false),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

@@ -21,22 +21,33 @@ class SettingsCubit extends Cubit<SettingsState> {
   final NotificationService _notifications;
   final SharedPreferences _prefs;
 
-  static const String _keyHour = 'reminder_hour';
-  static const String _keyMinute = 'reminder_minute';
-  static const String _keyEnabled = 'notifications_enabled';
-
   Future<void> setReminderTime(TimeOfDay time) async {
-    await _prefs.setInt(_keyHour, time.hour);
-    await _prefs.setInt(_keyMinute, time.minute);
+    await _prefs.setInt(SettingsState.keyHour, time.hour);
+    await _prefs.setInt(SettingsState.keyMinute, time.minute);
     emit(state.copyWith(reminderTime: time));
     await _applyScheduling(state);
   }
 
   Future<void> toggleNotifications(bool enabled) async {
-    await _prefs.setBool(_keyEnabled, enabled);
+    await _prefs.setBool(SettingsState.keyEnabled, enabled);
     emit(state.copyWith(notificationsEnabled: enabled));
     if (enabled) await _notifications.requestPermissionsIfNeeded();
     await _applyScheduling(state);
+  }
+
+  Future<void> toggleCategory(String category, {required bool enabled}) async {
+    final alreadyEnabled = state.enabledCategories.contains(category);
+    if (enabled == alreadyEnabled) return;
+    final current = List<String>.from(state.enabledCategories);
+    if (enabled) {
+      current.add(category);
+    } else {
+      current.remove(category);
+      // Never allow an empty selection — the prompt picker would break.
+      if (current.isEmpty) return;
+    }
+    await _prefs.setStringList(SettingsState.keyEnabledCategories, current);
+    emit(state.copyWith(enabledCategories: current));
   }
 
   Future<void> _applyScheduling(SettingsState s) async {

@@ -33,7 +33,7 @@ class PromptRepository {
 
   /// Curated queries for drawing practice. Picked deterministically by day
   /// so the user sees variety without jarring RNG.
-  static const List<String> _dailyQueries = [
+  static const List<String> allCategories = [
     'portrait',
     'still life',
     'landscape',
@@ -41,11 +41,19 @@ class PromptRepository {
     'hands',
     'architecture',
     'flower',
+    'fruit',
+    'trees',
+    'shells',
+    'cups',
   ];
 
-  Future<ImagePrompt> getTodayPrompt({DateTime? now}) async {
+  Future<ImagePrompt> getTodayPrompt({
+    DateTime? now,
+    List<String>? enabledCategories,
+  }) async {
     final date = now ?? DateTime.now();
-    final query = _dailyQueries[_dayOfYear(date) % _dailyQueries.length];
+    final pool = (enabledCategories == null || enabledCategories.isEmpty) ? allCategories : enabledCategories;
+    final query = pool[_dayOfYear(date) % pool.length];
     final photo = await _client.randomPhoto(query: query);
     return ImagePrompt(
       photoId: photo.id,

@@ -15,17 +15,20 @@ export 'sketch_session_state.dart';
 class SketchSessionCubit extends Cubit<SketchSessionState> {
   SketchSessionCubit({
     required PromptRepository promptRepository,
+    List<String>? enabledCategories,
     int totalSeconds = 300,
   }) : _prompts = promptRepository,
+       _enabledCategories = enabledCategories,
        super(SketchSessionState.initial(totalSeconds: totalSeconds));
 
   final PromptRepository _prompts;
+  final List<String>? _enabledCategories;
   Timer? _ticker;
 
   Future<void> requestSession() async {
     emit(state.copyWith(status: SketchSessionStatus.loadingPrompt, clearError: true));
     try {
-      final prompt = await _prompts.getTodayPrompt();
+      final prompt = await _prompts.getTodayPrompt(enabledCategories: _enabledCategories);
       emit(
         state.copyWith(
           status: SketchSessionStatus.ready,
@@ -50,7 +53,7 @@ class SketchSessionCubit extends Cubit<SketchSessionState> {
     if (state.status != SketchSessionStatus.ready) return;
     emit(state.copyWith(status: SketchSessionStatus.refreshingPrompt));
     try {
-      final prompt = await _prompts.getTodayPrompt();
+      final prompt = await _prompts.getTodayPrompt(enabledCategories: _enabledCategories);
       // Guard: if the user tapped Start while we were awaiting, the
       // status has moved past refreshingPrompt and they've locked in the
       // image they could see. Don't stomp on that with the new fetch.

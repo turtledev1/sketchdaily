@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../prompts/repository/prompt_repository.dart';
+import '../../settings/bloc/settings_cubit.dart';
 import '../../streak/bloc/streak_cubit.dart';
 import '../bloc/sketch_session_cubit.dart';
 import '../widgets/countdown_ring.dart';
@@ -17,7 +18,10 @@ class SketchSessionPage extends StatefulWidget {
   static Route<bool> route() {
     return MaterialPageRoute<bool>(
       builder: (context) => BlocProvider(
-        create: (ctx) => SketchSessionCubit(promptRepository: ctx.read<PromptRepository>())..requestSession(),
+        create: (ctx) => SketchSessionCubit(
+          promptRepository: ctx.read<PromptRepository>(),
+          enabledCategories: ctx.read<SettingsCubit>().state.enabledCategories,
+        )..requestSession(),
         child: const SketchSessionPage(),
       ),
     );
