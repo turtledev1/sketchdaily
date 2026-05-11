@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../badges/model/badge_definition.dart';
 import '../../celebration/view/celebration_dialog.dart';
-import '../../notifications/notification_service.dart';
 import '../../prompts/repository/prompt_repository.dart';
 import '../../streak/bloc/streak_cubit.dart';
 import '../bloc/settings_cubit.dart';
@@ -75,8 +74,6 @@ class _SettingsView extends StatelessWidget {
                 ),
                 const Divider(),
                 const _DebugCelebrationSection(),
-                const Divider(),
-                const _DebugNotificationsSection(),
               ],
             ],
           );
@@ -194,71 +191,6 @@ class _DebugCelebrationSection extends StatelessWidget {
                   label: Text('${def.threshold}-day'),
                   onPressed: () => showCelebrationDialog(context, threshold: def.threshold),
                 ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DebugNotificationsSection extends StatelessWidget {
-  const _DebugNotificationsSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Debug — Notifications',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: colorScheme.secondary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Show a test notification immediately, or schedule one a few '
-            'seconds out to verify the real scheduler path.',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ActionChip(
-                avatar: const Icon(Icons.notifications_active, size: 18),
-                label: const Text('Show now'),
-                onPressed: () async {
-                  await NotificationService.instance.requestPermissionsIfNeeded();
-                  await NotificationService.instance.showTestNotification();
-                },
-              ),
-              ActionChip(
-                avatar: const Icon(Icons.schedule, size: 18),
-                label: const Text('Schedule in 10s'),
-                onPressed: () async {
-                  await NotificationService.instance.requestPermissionsIfNeeded();
-                  await NotificationService.instance.scheduleDebugReminderIn(
-                    delay: const Duration(seconds: 10),
-                  );
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Scheduled in 10s — lock the screen or leave the app '
-                          'to see it fire.',
-                        ),
-                      ),
-                    );
-                  }
-                },
-              ),
             ],
           ),
         ],

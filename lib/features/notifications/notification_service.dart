@@ -97,35 +97,19 @@ class NotificationService {
     await _plugin.cancel(_dailyReminderId);
   }
 
-  /// Debug-only: fires a single immediate notification using the same channel
-  /// the daily reminder uses. Lets us verify channel/icon/permission without
-  /// waiting for a scheduled trigger.
-  Future<void> showTestNotification() async {
-    await _plugin.show(
-      9999,
-      _reminderTitle,
-      _reminderBody,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          channelId,
-          channelName,
-          channelDescription: channelDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-      ),
-    );
-  }
-
-  /// Debug-only: schedule a reminder a fixed number of seconds from now,
-  /// so we can watch the real scheduler fire without waiting a full day.
-  Future<void> scheduleDebugReminderIn({required Duration delay}) async {
-    await _plugin.cancel(_dailyReminderId);
-    final scheduled = tz.TZDateTime.now(tz.local).add(delay);
+  /// Cancels today's pending reminder and reschedules it starting from tomorrow.
+  /// Called after a completed sketch session so the user isn't nudged on a day
+  /// they've already drawn.
+  Future<void> suppressTodayReminder({
+    required int hour,
+    required int minute,
+  }) async {
+    await cancelDailyReminder();
+    final scheduled = _nextInstanceOf(hour: hour, minute: minute, skipToday: true);
     await _plugin.zonedSchedule(
       _dailyReminderId,
       _reminderTitle,
-      'Debug — scheduled via scheduleDebugReminderIn.',
+      _reminderBody,
       scheduled,
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -137,11 +121,16 @@ class NotificationService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
-  tz.TZDateTime _nextInstanceOf({required int hour, required int minute}) {
+  tz.TZDateTime _nextInstanceOf({
+    required int hour,
+    required int minute,
+    bool skipToday = false,
+  }) {
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(
       tz.local,
@@ -151,7 +140,7 @@ class NotificationService {
       hour,
       minute,
     );
-    if (!scheduled.isAfter(now)) {
+    if (skipToday || !scheduled.isAfter(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }
     return scheduled;

@@ -65,6 +65,8 @@ class _SketchSessionPageState extends State<SketchSessionPage> {
           photographerName: lockedPrompt.photographerName,
           photographerProfileUrl: lockedPrompt.photographerProfileUrl,
         );
+        // Suppress today's reminder — the user already sketched.
+        context.read<SettingsCubit>().suppressTodayReminder();
         // `true` signals to the home page that a session just completed so
         // it can show the "nice work" SnackBar there (away from this page,
         // which is about to be disposed).

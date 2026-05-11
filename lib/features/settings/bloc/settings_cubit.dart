@@ -50,6 +50,14 @@ class SettingsCubit extends Cubit<SettingsState> {
     emit(state.copyWith(enabledCategories: current));
   }
 
+  Future<void> suppressTodayReminder() async {
+    if (!state.notificationsEnabled) return;
+    await _notifications.suppressTodayReminder(
+      hour: state.reminderTime.hour,
+      minute: state.reminderTime.minute,
+    );
+  }
+
   Future<void> _applyScheduling(SettingsState s) async {
     if (s.notificationsEnabled) {
       await _notifications.scheduleDailyReminder(
