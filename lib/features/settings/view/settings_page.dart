@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../badges/model/badge_definition.dart';
 import '../../celebration/view/celebration_dialog.dart';
-import '../../prompts/repository/prompt_repository.dart';
 import '../../streak/bloc/streak_cubit.dart';
 import '../bloc/settings_cubit.dart';
 
@@ -119,10 +118,10 @@ class _CategorySection extends StatelessWidget {
     return BlocBuilder<SettingsCubit, SettingsState>(
       buildWhen: (prev, next) => prev.enabledCategories != next.enabledCategories,
       builder: (context, state) {
-        final enabled = state.enabledCategories;
-        final isLastEnabled = enabled.length == 1;
+        final categories = state.enabledCategories;
+        final isLast = categories.length == 1;
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -134,25 +133,83 @@ class _CategorySection extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Choose which subjects appear in your daily prompt.',
+                'Subjects that appear in your daily prompt. Add your own or remove any.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-              const SizedBox(height: 8),
-              for (final category in PromptRepository.allCategories)
-                CheckboxListTile(
-                  title: Text(_toLabel(category)),
-                  value: enabled.contains(category),
-                  onChanged: (isLastEnabled && enabled.contains(category))
-                      ? null
-                      : (value) => context.read<SettingsCubit>().toggleCategory(category, enabled: value ?? false),
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final category in categories)
+                    Chip(
+                      label: Text(_toLabel(category)),
+                      onDeleted: isLast ? null : () => context.read<SettingsCubit>().removeCategory(category),
+                    ),
+                  ActionChip(
+                    avatar: const Icon(Icons.add, size: 18),
+                    label: const Text('Add'),
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => BlocProvider.value(
+                        value: context.read<SettingsCubit>(),
+                        child: const _AddCategoryDialog(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         );
       },
     );
+  }
+}
+
+class _AddCategoryDialog extends StatefulWidget {
+  const _AddCategoryDialog();
+
+  @override
+  State<_AddCategoryDialog> createState() => _AddCategoryDialogState();
+}
+
+class _AddCategoryDialogState extends State<_AddCategoryDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add category'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        textCapitalization: TextCapitalization.none,
+        decoration: const InputDecoration(hintText: 'e.g. bicycle, clouds, shoes…'),
+        onSubmitted: (_) => _submit(context),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => _submit(context),
+          child: const Text('Add'),
+        ),
+      ],
+    );
+  }
+
+  void _submit(BuildContext context) {
+    context.read<SettingsCubit>().addCategory(_controller.text);
+    Navigator.of(context).pop();
   }
 }
 

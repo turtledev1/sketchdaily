@@ -18,11 +18,9 @@ class SettingsState extends Equatable {
 
   factory SettingsState.fromPrefs(SharedPreferences prefs) {
     final saved = prefs.getStringList(keyEnabledCategories);
-    // Validate persisted values against the known list so stale entries
-    // (e.g. after a category is removed in a future update) don't slip through.
-    final enabledCategories = saved == null
+    final enabledCategories = (saved == null || saved.isEmpty)
         ? List<String>.from(PromptRepository.allCategories)
-        : saved.where(PromptRepository.allCategories.contains).toList();
+        : List<String>.from(saved);
 
     return SettingsState(
       reminderTime: TimeOfDay(
@@ -30,17 +28,14 @@ class SettingsState extends Equatable {
         minute: prefs.getInt(keyMinute) ?? 0,
       ),
       notificationsEnabled: prefs.getBool(keyEnabled) ?? true,
-      enabledCategories: enabledCategories.isEmpty
-          ? List<String>.from(PromptRepository.allCategories)
-          : enabledCategories,
+      enabledCategories: enabledCategories,
     );
   }
 
   final TimeOfDay reminderTime;
   final bool notificationsEnabled;
 
-  /// Subset of [PromptRepository.allCategories] the user wants to practice.
-  /// Never empty — falls back to all categories if the user disables everything.
+  /// Categories (default or custom) the user wants to practice. Never empty.
   final List<String> enabledCategories;
 
   SettingsState copyWith({

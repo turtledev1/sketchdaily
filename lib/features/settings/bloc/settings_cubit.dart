@@ -35,19 +35,19 @@ class SettingsCubit extends Cubit<SettingsState> {
     await _applyScheduling(state);
   }
 
-  Future<void> toggleCategory(String category, {required bool enabled}) async {
-    final alreadyEnabled = state.enabledCategories.contains(category);
-    if (enabled == alreadyEnabled) return;
-    final current = List<String>.from(state.enabledCategories);
-    if (enabled) {
-      current.add(category);
-    } else {
-      current.remove(category);
-      // Never allow an empty selection — the prompt picker would break.
-      if (current.isEmpty) return;
-    }
-    await _prefs.setStringList(SettingsState.keyEnabledCategories, current);
-    emit(state.copyWith(enabledCategories: current));
+  Future<void> addCategory(String category) async {
+    final trimmed = category.trim().toLowerCase();
+    if (trimmed.isEmpty || state.enabledCategories.contains(trimmed)) return;
+    final updated = [...state.enabledCategories, trimmed];
+    await _prefs.setStringList(SettingsState.keyEnabledCategories, updated);
+    emit(state.copyWith(enabledCategories: updated));
+  }
+
+  Future<void> removeCategory(String category) async {
+    if (state.enabledCategories.length <= 1) return;
+    final updated = state.enabledCategories.where((c) => c != category).toList();
+    await _prefs.setStringList(SettingsState.keyEnabledCategories, updated);
+    emit(state.copyWith(enabledCategories: updated));
   }
 
   Future<void> suppressTodayReminder() async {
