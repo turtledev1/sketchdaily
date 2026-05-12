@@ -45,6 +45,7 @@ Future<void> main() async {
         providers: [
           BlocProvider(create: (_) => StreakCubit(repository: streakRepository)),
           BlocProvider(
+            lazy: false,
             create: (_) => SettingsCubit(
               notifications: NotificationService.instance,
               prefs: prefs,
